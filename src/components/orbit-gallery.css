@@ -1,0 +1,160 @@
+.orbit-scene {
+    --orbit-radius: 240px;
+    --orbit-diameter: calc(var(--orbit-radius) * 2);
+    --orbit-card-width: calc(var(--orbit-radius) * .4123447093);
+    --orbit-card-height: calc(var(--orbit-card-width) * 1.75);
+    --orbit-footer-height: calc(var(--orbit-card-width) * .25);
+    --orbit-face-offset: calc(var(--orbit-radius) * .003);
+    position: relative;
+    width: 100%;
+    height: clamp(560px, 55vw, 700px);
+    perspective: 1250px;
+    perspective-origin: 50% 50%;
+    overflow: hidden;
+    /* Only the interactive sphere captures vertical touch; the page outside it
+       keeps normal scrolling. Browser pan-y would cancel the new X-axis drag. */
+    touch-action: none;
+    cursor: grab;
+    outline: none;
+    isolation: isolate;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.orbit-scene:focus-visible { outline: 1px solid var(--ui-focus); outline-offset: 3px; border-radius: 10px; }
+.orbit-scene.is-dragging { cursor: grabbing; }
+.orbit-scene::after {
+    content: "";
+    position: absolute;
+    width: min(53%, 480px);
+    height: 40px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse, var(--palette-glow) 0%, var(--palette-accent-faint) 38%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+.orbit-scene-meta { position: absolute; inset: 21px 0 auto; display: flex; justify-content: space-between; color: var(--home-muted); font: 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 1.8px; pointer-events: none; }
+.orbit-scene-meta b { color: var(--ui-button-text); font-weight: 400; }
+.orbit-camera, .orbit-world, .orbit-sphere {
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    /* Grouping effects belong only on flat leaf faces, not these 3D carriers. */
+    overflow: visible;
+    opacity: 1;
+    filter: none;
+    isolation: auto;
+    width: 0;
+    height: 0;
+}
+.orbit-camera { position: absolute; top: 50%; left: 50%; transform-origin: 0 0; }
+.orbit-world { position: relative; }
+.orbit-gallery .orbit-sphere.orbit-sphere { position: absolute !important; inset: 0 auto auto 0; display: block !important; width: 0; height: 0; overflow: visible; }
+.orbit-wireframe { position: absolute; width: 0; height: 0; transform-style: preserve-3d; will-change: transform; pointer-events: none; }
+.orbit-great-circle { position: absolute; left: calc(var(--orbit-radius) * -1); top: calc(var(--orbit-radius) * -1); width: var(--orbit-diameter); height: var(--orbit-diameter); border: 1px solid var(--palette-wire); border-radius: 50%; transform: var(--orbit-circle-transform); }
+.orbit-gallery .orbit-sphere > .orbit-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--orbit-card-width);
+    height: var(--orbit-card-height);
+    margin: calc(var(--orbit-card-height) / -2) 0 0 calc(var(--orbit-card-width) / -2);
+    /* Direct inline translations keep cards upright without inherited matrices. */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    transform-style: preserve-3d;
+    overflow: visible !important;
+    background: transparent !important;
+    border: 0;
+    box-shadow: none !important;
+    transition: none !important;
+    outline: none;
+}
+.orbit-card-front {
+    box-sizing: border-box;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 7px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 1px solid var(--palette-card-border);
+    /* At 5% a diagnostic card can be narrower than two CSS pixels. Keep
+       border-box dimensions proportional instead of imposing a 2px floor. */
+    border-width: min(1px, calc(var(--orbit-card-width) * .25));
+    /* Only this flat content layer fades. Keep opacity off 3D carriers and
+       avoid time-based opacity transitions that lag behind spatial depth. */
+    will-change: opacity;
+}
+.orbit-card-front { transform: translateZ(var(--orbit-face-offset)); opacity: 1; background: var(--ui-panel); box-shadow: 0 5px 18px #0007; transition: border-color .2s; }
+/* Native link/image dragging must not steal the sphere's pointer stream. */
+.orbit-card, .orbit-card * { -webkit-user-drag: none; }
+.orbit-card-front > div:first-child { flex: 1; min-height: 0; aspect-ratio: auto; }
+.orbit-card-front img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.orbit-card-front > div:nth-of-type(2) { flex: none; padding: 0 calc(var(--orbit-card-width) * .05); background: var(--ui-panel); height: var(--orbit-footer-height); display: flex; align-items: center; }
+.orbit-card-front > div:nth-of-type(2) button { font-size: calc(var(--orbit-card-width) * .093); color: var(--home-white); line-height: 1.3; }
+.orbit-card-front .text-xs { font-size: calc(var(--orbit-card-width) * .085); padding: calc(var(--orbit-card-width) * .03) calc(var(--orbit-card-width) * .05); }
+.orbit-card-front .bottom-2 { bottom: calc(var(--orbit-card-width) * .06); }
+.orbit-card-front .left-2 { left: calc(var(--orbit-card-width) * .04); }
+.orbit-card-front .right-2 { right: calc(var(--orbit-card-width) * .04); }
+.orbit-card-front img:hover { transform: none; }
+.orbit-card:hover .orbit-card-front, .orbit-card:focus-visible .orbit-card-front { border-color: var(--home-accent); }
+.orbit-card-number { position: absolute; top: calc(var(--orbit-card-width) * .05); left: calc(var(--orbit-card-width) * .05); padding: calc(var(--orbit-card-width) * .03) calc(var(--orbit-card-width) * .04); border: 1px solid var(--home-line); border-radius: 3px; background: var(--palette-number-background); color: var(--palette-number-text); font: calc(var(--orbit-card-width) * .08)/1 ui-monospace, SFMono-Regular, Menlo, monospace; pointer-events: none; }
+.orbit-gallery .orbit-sphere.orbit-sphere > :not(.orbit-card) { width: min(380px, calc(100vw - 60px)); position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+.orbit-gallery .orbit-sphere.orbit-sphere > .absolute { display: none !important; }
+.orbit-scene[data-state="empty"] .orbit-wireframe { display: none; }
+.orbit-loading { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: var(--ui-button-text); background: var(--ui-inset); border: 1px solid var(--ui-border); border-radius: 999px; padding: 8px 14px; font-size: 11px; align-items: center; gap: 8px; pointer-events: none; }
+.orbit-loading:not([hidden]) { display: flex; }
+.orbit-loading > span { width: 5px; height: 5px; border-radius: 50%; background: var(--home-accent); }
+
+.orbit-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border-top: 1px solid var(--home-line); padding-top: 15px; }
+.orbit-toolbar > p, .orbit-toolbar-content > p { display: flex; align-items: center; color: var(--home-muted); font-size: 11px; letter-spacing: .2px; }
+.orbit-gesture-icon { display: inline-block; font-size: 18px; margin-right: 9px; color: var(--home-accent); }
+/* Collapse the entire toolbar, including future functions, except its trigger. */
+.orbit-gallery #orbitToolbar { gap: 9px; }
+.orbit-gallery #orbitToolbar[data-collapsed="true"] > :not(#orbitToolbarToggle) { display: none !important; }
+.orbit-toolbar-content { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex: 1; min-width: 0; }
+.orbit-toolbar-content[hidden] { display: none; }
+.orbit-gallery #orbitToolbarContent { justify-content: flex-end; }
+.orbit-toolbar-content > p { min-height: 28px; }
+.orbit-toolbar-toggle { display: flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; padding: 0; margin: 0; border: 0; border-radius: 4px; background: transparent; font-family: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.orbit-toolbar-toggle:hover { background: var(--ui-hover); color: var(--home-white); }
+.orbit-toolbar-toggle:focus-visible { outline: 1px solid var(--home-accent); outline-offset: 1px; }
+.orbit-control-stack { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+/* Homepage rows share the pause/continue row's intrinsic width, without range labels. */
+.orbit-gallery .orbit-control-stack { width: max-content; align-items: stretch; }
+.orbit-controls { display: flex; align-items: center; gap: 3px; border: 1px solid var(--home-line); border-radius: 7px; padding: 3px; background: var(--ui-panel); }
+.orbit-control-label { padding: 0 7px; color: var(--home-muted); font-size: 10px; white-space: nowrap; }
+.orbit-control-range { margin-left: auto; padding: 0 7px; color: var(--home-muted); font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+.orbit-controls button { display: flex; justify-content: center; align-items: center; min-width: 30px; height: 28px; padding: 0 8px; border-radius: 4px; color: var(--ui-button-text); font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; transition: background .15s; }
+.orbit-controls button:hover { background: var(--ui-hover); color: var(--home-white); }
+.orbit-controls button:focus-visible { outline: 1px solid var(--home-accent); outline-offset: 1px; }
+.orbit-controls button:disabled { opacity: .35; cursor: default; }
+.orbit-controls #orbitZoom, .orbit-controls #orbitCardScale, .orbit-controls #orbitSpeed { min-width: 49px; font-size: 10px; }
+/* Read-only percentages and one combined homepage reset. */
+.orbit-controls .orbit-value { display: flex; align-items: center; justify-content: center; height: 28px; padding: 0 8px; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ui-button-text); }
+.orbit-controls #orbitReset { font-family: inherit; font-size: 11px; white-space: nowrap; }
+/* End combined homepage reset. */
+.orbit-controls #orbitPause { gap: 7px; font-family: inherit; font-size: 11px; }
+.orbit-control-divider { width: 1px; height: 12px; background: var(--home-line); margin: 0 5px; }
+.orbit-pause-icon { width: 8px; height: 10px; border-left: 2px solid currentColor; border-right: 2px solid currentColor; }
+[aria-pressed="true"] > .orbit-pause-icon { width: 0; height: 0; border: 5px solid transparent; border-left: 7px solid currentColor; border-right: 0; }
+
+
+.orbit-gallery { margin-top:16px; }
+.orbit-gallery .orbit-control-stack { width:max-content; align-items:stretch; }
+.orbit-gallery .orbit-poster { position:relative; flex:1; min-height:0; width:100%; padding:0; }
+.orbit-gallery .orbit-title { height:var(--orbit-footer-height); flex:none; width:100%; padding:0 calc(var(--orbit-card-width) * .05); text-align:center; background:var(--ui-panel); color:var(--home-white); font-size:calc(var(--orbit-card-width) * .093); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.orbit-gallery .orbit-rating { position:absolute; bottom:calc(var(--orbit-card-width) * .05); left:calc(var(--orbit-card-width) * .04); background:rgba(0,0,0,.65); padding:calc(var(--orbit-card-width) * .04); border-radius:3px; color:var(--home-white); font-size:calc(var(--orbit-card-width) * .09); }
+.orbit-gallery .orbit-rating-star { color:rgb(var(--c-rating)); }
+/* Override Preflight's text-decoration:inherit on animated links. In Chrome
+   it triggers expensive style recalculation as the carrier moves/fades, even
+   when the inherited decoration is visually none. Keep this reset scoped. */
+.orbit-gallery .orbit-link { position:absolute; right:calc(var(--orbit-card-width) * .05); bottom:calc(var(--orbit-footer-height) + var(--orbit-card-width) * .05); color:var(--home-white); font-size:calc(var(--orbit-card-width) * .1); line-height:1; padding:calc(var(--orbit-card-width) * .03); border-radius:3px; background:var(--palette-number-background); text-decoration:none; }
+.orbit-gallery .orbit-empty-poster { display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--ui-inset);color:var(--home-muted);font-size:calc(var(--orbit-card-width) * .2); }
+@media(max-width:900px){.orbit-scene{height:610px}}
+@media(max-width:600px){.orbit-scene{height:clamp(390px,112vw,500px)}.orbit-toolbar{gap:8px;flex-wrap:wrap;padding-top:11px}.orbit-control-stack{margin-left:auto}.orbit-controls button{min-width:24px;height:25px;padding:0 6px}.orbit-controls .orbit-value{height:25px;padding:0 6px}.orbit-controls #orbitZoom,.orbit-controls #orbitCardScale,.orbit-controls #orbitSpeed{min-width:40px}}
