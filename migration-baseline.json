@@ -1,0 +1,46 @@
+{
+  "legacyCommit": "94cf15a8057a012d0f07778c21abfc9c5242147e",
+  "upstreamRepository": "https://github.com/LibreSpark/LibreTV",
+  "upstreamCommit": "a24ad336a3f7c8a16ca93d1f1198e08ac6b7e943",
+  "upstreamVersion": "2.16.12",
+  "legacyArchive": "/private/tmp/jayflix-94cf15a-before-next.tar",
+  "productionCutover": false,
+  "orbit": {
+    "maximumCards": 1322,
+    "minimumScale": 0.5,
+    "maximumScale": 5,
+    "defaultSpeedPercent": 50,
+    "defaultSpeedRadiansPerSecond": 0.075,
+    "mobile": { "zoom": 1.5, "cardScale": 1.5 },
+    "desktop": { "zoom": 2, "cardScale": 0.7 },
+    "preferencesKey": "jayflix.orbit.preferences.v1"
+  },
+  "paletteKey": "jayflix.ui.palette.v1",
+  "verification": {
+    "date": "2026-10-04",
+    "applicationTests": 778,
+    "legacyTests": 189,
+    "typecheck": true,
+    "lint": true,
+    "generatedIconCheck": true,
+    "productionAuditFindings": 0,
+    "developmentAuditHighFindings": 7,
+    "openNextBuildId": "2pEIoyOwy_r0w1t0esn7y",
+    "cloudflareDryRun": true,
+    "workerMissingConfigChecks": 31,
+    "workerConfiguredChecks": 39,
+    "workerRuntimeFixtures": 15,
+    "nodeStandaloneChecks": 39,
+    "externalChrome": {
+      "independentAccessAndAdminGates": true,
+      "restoredOrbitPreferences": true,
+      "actual1322EmptyCards": true,
+      "realSearchDetailAndHlsPlayback": true,
+      "playerProgressMatchesAccent": true,
+      "mobile375pxNoHorizontalOverflow": true
+    },
+    "productionCpuAndLoadValidated": false,
+    "dockerContainerValidated": false,
+    "all1322RealImagesPerformanceValidated": false
+  }
+}

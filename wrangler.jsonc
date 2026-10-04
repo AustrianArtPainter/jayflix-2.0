@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jayflix-2-0",
+  "pages_build_output_dir": ".cf-pages",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "dev": {
+    "ip": "127.0.0.1",
+    "port": 8083,
+    "local_protocol": "http"
+  }
+  // PASSWORD, ADMINPASSWORD and PROXY_SECRET are runtime secret bindings.
+  // Add them outside source control; no values or paid resources are declared here.
+}

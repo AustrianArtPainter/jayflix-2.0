@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jayflix-2-0",
+  "main": ".open-next/pages-entry.mjs",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" }
+  // Used exclusively with --dry-run to produce a Pages _worker.js bundle.
+}

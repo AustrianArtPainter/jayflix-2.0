@@ -1,0 +1,31 @@
+# 依赖与构建产物：镜像内由 npm ci / next build 重新生成
+node_modules
+.next
+.next-dev
+.open-next
+.cf-pages
+.wrangler
+cloudflare-env.d.ts
+out
+tsconfig.tsbuildinfo
+
+# 版本控制与 CI
+.git
+.gitignore
+.github
+
+# 本地环境与日志
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+.env*.local
+*.log
+coverage
+
+# 文档与编排文件（不参与镜像构建）
+Dockerfile
+docker-compose.yml
+docs
+README.md
+LICENSE
