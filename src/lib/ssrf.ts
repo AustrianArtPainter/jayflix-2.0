@@ -1,6 +1,7 @@
 import dns from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { getServerEnv, isWorkerRuntime } from './cloudflare-env';
+import { resolveWorkerAddresses } from './worker-dns';
 
 /** 去掉 URL.hostname 对 IPv6 附加的方括号（"[::1]" → "::1"） */
 function stripBrackets(host: string): string {
@@ -70,7 +71,8 @@ export function isValidProxyUrl(urlString: string): boolean {
   }
 }
 
-/** DNS 解析后校验所有 A/AAAA 地址。Workers 不支持 lookup，不能以失败为由放行。 */
+/** DNS 解析后校验所有 A/AAAA 地址。Workers 使用带记录类型/状态的 DoH，
+ * 避免 node:dns 混入 CNAME 和将无 AAAA 误报为 NXDOMAIN；解析失败仍不放行。 */
 export async function isBlockedByDNS(urlString: string): Promise<boolean> {
   try {
     if (!isValidProxyUrl(urlString)) return true;
@@ -78,7 +80,9 @@ export async function isBlockedByDNS(urlString: string): Promise<boolean> {
     if (isIP(hostname)) {
       return isPrivateIP(hostname);
     }
-    const results = await Promise.allSettled([dns.resolve4(hostname), dns.resolve6(hostname)]);
+    const results = await Promise.allSettled(isWorkerRuntime()
+      ? [resolveWorkerAddresses(hostname, 1), resolveWorkerAddresses(hostname, 28)]
+      : [dns.resolve4(hostname), dns.resolve6(hostname)]);
     const addresses: string[] = [];
     for (const result of results) {
       if (result.status === 'fulfilled') addresses.push(...result.value);
