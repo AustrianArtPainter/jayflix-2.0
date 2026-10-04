@@ -17,7 +17,7 @@ const compiled = await build({
     contents: `
       import { Buffer } from 'node:buffer';
       import process from 'node:process';
-      import dns from 'node:dns/promises';
+      import { resolveWorkerAddresses } from './src/lib/worker-dns';
       import { parseXmltv, XmltvLimitError } from './src/lib/xmltv';
       import { isBlockedByDNS, isPrivateIP, allowLivePrivate, checkLiveUrlAllowed } from './src/lib/ssrf';
       import { getEnvSources } from './src/lib/env-sources';
@@ -88,7 +88,7 @@ const compiled = await build({
           return Response.json({ blocked: await isBlockedByDNS('https://fixture.example.com/') });
         }
         if (pathname === '/dns-details') {
-          const answers = await Promise.allSettled([dns.resolve4('fixture.example.com'), dns.resolve6('fixture.example.com')]);
+          const answers = await Promise.allSettled([resolveWorkerAddresses('fixture.example.com', 1), resolveWorkerAddresses('fixture.example.com', 28)]);
           return Response.json(answers.map((entry) => entry.status === 'fulfilled' ? entry : { status: entry.status, reason: { code: entry.reason.code, message: entry.reason.message } }));
         }
         if (pathname === '/ips') {
@@ -148,10 +148,12 @@ const runtimeOptions = {
     if (dnsMode === 'mixed' && !ipv6) addresses.push('10.0.0.1');
     if (dnsMode === 'mapped' && ipv6) addresses.push('::ffff:127.0.0.1');
     if (dnsMode === 'nodata' && ipv6) addresses.length = 0;
+    if (dnsMode === 'cname' && ipv6) addresses.length = 0;
     return Response.json({
-      Status: 0, TC: false, RD: true, RA: true, AD: false, CD: false,
+      Status: dnsMode === 'nxdomain' ? 3 : 0, TC: false, RD: true, RA: true, AD: false, CD: false,
       Question: [{ name: 'fixture.example.com', type: ipv6 ? 28 : 1 }],
-      Answer: addresses.map((data) => ({ name: 'fixture.example.com', type: ipv6 ? 28 : 1, TTL: 60, data })),
+      Answer: [...(dnsMode === 'cname' ? [{ name: 'fixture.example.com', type: 5, TTL: 60, data: 'alias.example.com.' }] : []),
+        ...addresses.map((data) => ({ name: 'fixture.example.com', type: ipv6 ? 28 : 1, TTL: 60, data }))],
     }, { headers: { 'Content-Type': 'application/dns-json' } });
   },
 };
@@ -169,7 +171,7 @@ try {
   assert.deepEqual(await ips.json(), { mapped: true, expanded: true, public: false });
   const dns = await runtime.dispatchFetch('http://runtime.test/dns');
   assert.equal((await dns.json()).blocked, true, 'DNS outage must fail closed');
-  assert(dnsAttempts > 0, 'supported Workers resolve4/resolve6 must attempt DoH');
+  assert(dnsAttempts > 0, 'typed Workers resolver must attempt DoH: ' + JSON.stringify(await (await runtime.dispatchFetch('http://runtime.test/dns-details')).json()));
   dnsMode = 'public';
   const publicDNS = await runtime.dispatchFetch('http://runtime.test/dns');
   const diagnostic = await runtime.dispatchFetch('http://runtime.test/dns-details');
@@ -181,6 +183,10 @@ try {
   assert.equal((await (await runtime.dispatchFetch('http://runtime.test/dns')).json()).blocked, true, 'mapped private IPv6 answer');
   dnsMode = 'nodata';
   assert.equal((await (await runtime.dispatchFetch('http://runtime.test/dns')).json()).blocked, false, 'public A plus absent AAAA');
+  dnsMode = 'cname';
+  assert.equal((await (await runtime.dispatchFetch('http://runtime.test/dns')).json()).blocked, false, 'CNAME records are names, not IP addresses; public A with CNAME-only AAAA');
+  dnsMode = 'nxdomain';
+  assert.equal((await (await runtime.dispatchFetch('http://runtime.test/dns')).json()).blocked, true, 'NXDOMAIN is not successful absent AAAA');
   const live = await runtime.dispatchFetch('http://runtime.test/stream');
   assert.equal(live.status, 206);
   assert.equal(rangeHeader, 'bytes=0-2');
@@ -232,7 +238,7 @@ try {
     recommend: 'bangumi', image: 'direct', search: { maxPages: 2, sourceTimeoutMs: 4000 },
     private: false, privateAllowed: false,
   }, 'current Worker settings consumed; LIVE_ALLOW_PRIVATE=1 must still stay disabled');
-  console.log('Local workerd runtime: gzip, DNS A/AAAA, Range streaming, redirects, missing/current secrets and runtime settings passed (15 checks).');
+  console.log('Local workerd runtime: gzip, typed DNS A/AAAA/CNAME/NODATA/NXDOMAIN, Range streaming, redirects, missing/current secrets and runtime settings passed (17 checks).');
 } finally {
   await runtime.dispose();
 }
