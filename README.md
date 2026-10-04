@@ -46,6 +46,10 @@ npm run dev -- --port 8081
 其他源、推荐和限制项见 [.env.example](.env.example)。`wrangler.jsonc` 不包含密码值，
 不绑定 R2、KV、D1、Durable Objects 或付费资源。未配置访问密码时接口返回 503，不放行。
 
+Workers 的公网安全校验通过 Cloudflare DNS 的带类型 DoH 记录核验所有 A/AAAA 地址，
+正确区分 CNAME 别名、无 IPv6 记录与 NXDOMAIN，避免豆瓣和影视榜单被误拦截；
+解析失败、私网地址及不安全重定向仍拒绝。第三方数据源本身的限流或故障不保证消除。
+
 构建脚本移除传给 Next/OpenNext 的密码环境变量，且拒绝含 `.env*` / `.dev.vars` 的源码目录
 （空白 `.env.example` 除外）。本地构建须用不含私密环境文件的独立检出，避免忽略文件进入编译产物。
 
