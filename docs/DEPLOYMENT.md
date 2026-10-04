@@ -119,8 +119,15 @@ or shared caches require a separately scoped design and resources.
 
 Route handlers retain the Node runtime: OpenNext adapts it to Workers; declaring
 the Next `edge` runtime would remove required compatible Node APIs. DNS validation
-uses Workers-supported `node:dns/promises.resolve4` and `resolve6`; every A/AAAA
-answer must be public. Only ENODATA is accepted as an absent address family.
+uses Node `resolve4`/`resolve6` on Node/Docker. On Workers, typed DoH records from
+the fixed Cloudflare DNS resolver distinguish CNAMEs from IP addresses and
+successful absent AAAA (Status=0) from NXDOMAIN (Status=3). Workers' node:dns
+implementation can flatten CNAME names into resolve4/6 results and report NODATA
+as ENOTFOUND; treating those as Node-shaped replies falsely blocks Douban and
+the primary 60s provider before fetch. Every returned A/AAAA address must remain
+public. Node accepts only ENODATA as an absent address family; Workers accepts
+only successful DNS replies. DNS response bytes are bounded to 64 KiB with an
+8-second deadline and no automatic resolver redirects.
 NXDOMAIN, timeouts, unsupported DNS and empty results fail closed. Each redirect
 is revalidated and its previous body is cancelled to release connection slots.
 DNS preflight cannot pin the later connection in Node fetch; Workers also applies
