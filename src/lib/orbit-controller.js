@@ -313,6 +313,16 @@ export function createOrbitController(root, global = window) {
             }
         }
 
+        // Pointer preventDefault() cannot cancel native viewport panning. Keep
+        // CSS touch-action:none as the primary contract, plus a scene-local
+        // Touch Events guard for iOS/WebKit scroll arbitration. Cancel the very
+        // first movement, even below DRAG_THRESHOLD or before pointer capture.
+        // Do not cancel touchstart/end: a stationary poster/link tap must work.
+        // Pointer Events alone still own rotation/pinch, avoiding double input.
+        listen(scene, 'touchmove', event => {
+            if (event.cancelable) event.preventDefault();
+        }, { capture: true, passive: false });
+
         listen(scene, 'pointerdown', event => {
             if (event.pointerType === 'mouse' && event.button !== 0) return;
             // Cancel mouse defaults before the first movement can start a native

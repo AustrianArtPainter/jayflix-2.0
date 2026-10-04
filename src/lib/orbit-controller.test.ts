@@ -29,6 +29,21 @@ function frame() {
   callbacks.forEach((callback) => callback(performance.now()));
 }
 
+function touch(target: Element, type = 'touchmove', cancelable = true) {
+  const event = new Event(type, { bubbles: true, cancelable });
+  target.dispatchEvent(event);
+  return event;
+}
+
+function pointer(target: Element, type: string, x: number, y: number, id = 1) {
+  // jsdom does not implement PointerEvent. Exercise the real DOM listeners,
+  // including the touch + pointer streams delivered for the same movement.
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.assign(event, { pointerId: id, pointerType: 'touch', clientX: x, clientY: y, button: 0 });
+  target.dispatchEvent(event);
+  return event;
+}
+
 beforeEach(() => {
   frames = new Map(); sequence = 0; disconnect.mockClear();
   // Node 26's native localStorage accessor must not shadow jsdom's browser fixture.
@@ -129,5 +144,95 @@ describe('scoped orbit animation lifecycle', () => {
     expect([scene.dataset.zoom, scene.dataset.cardScale, scene.dataset.speedPercent]).toEqual(['3.1', '2.6', '90']);
     root.querySelector<HTMLButtonElement>('#orbitReset')!.click();
     expect([scene.dataset.zoom, scene.dataset.cardScale, scene.dataset.speedPercent]).toEqual(['2', '0.7', '50']);
+  });
+});
+
+describe('sphere-local native touch arbitration', () => {
+  it.each(['scene', 'poster', 'link'])('cancels native scrolling from the first movement on %s', (origin) => {
+    const { root, scene } = fixture(16, true);
+    const target = origin === 'scene' ? scene : root.querySelector(origin === 'poster' ? '.orbit-card button' : '.orbit-link')!;
+    const before = root.querySelector<HTMLElement>('.orbit-card')!.style.transform;
+    expect(touch(target).defaultPrevented).toBe(true);
+    // The compatibility guard must not rotate a second time or schedule work.
+    expect(root.querySelector<HTMLElement>('.orbit-card')!.style.transform).toBe(before);
+  });
+
+  it('uses a non-passive capture listener even when a poster stops bubbling', () => {
+    const add = vi.spyOn(window.EventTarget.prototype, 'addEventListener');
+    const { root } = fixture();
+    expect(add.mock.calls.some(([type, , options]) => type === 'touchmove' &&
+      typeof options === 'object' && options?.capture === true && options?.passive === false)).toBe(true);
+    add.mockRestore();
+    const poster = root.querySelector('button')!;
+    poster.addEventListener('touchmove', (event) => event.stopPropagation());
+    expect(touch(poster).defaultPrevented).toBe(true);
+  });
+
+  it('does not cancel taps or touch movement outside the scene, including controls', () => {
+    const { root } = fixture();
+    const poster = root.querySelector('.orbit-card button')!;
+    const activate = vi.fn(); poster.addEventListener('click', activate);
+    expect(touch(poster, 'touchstart').defaultPrevented).toBe(false);
+    expect(pointer(poster, 'pointerdown', 0, 0).defaultPrevented).toBe(false);
+    pointer(poster, 'pointerup', 0, 0);
+    expect(touch(poster, 'touchend').defaultPrevented).toBe(false);
+    (poster as HTMLButtonElement).click();
+    expect(activate).toHaveBeenCalledTimes(1);
+    const outside = document.createElement('div'); document.body.append(outside);
+    expect(touch(outside).defaultPrevented).toBe(false);
+    expect(touch(root.querySelector('#orbitReset')!).defaultPrevented).toBe(false);
+  });
+
+  it('blocks scrolling below the drag threshold and keeps rotation owned by pointers', () => {
+    localStorage.setItem('jayflix.orbit.preferences.v1', JSON.stringify({ version: 1, paused: true }));
+    const { root, scene } = fixture(); frame();
+    const card = root.querySelector<HTMLElement>('.orbit-card')!;
+    const initial = card.style.transform;
+    pointer(scene, 'pointerdown', 0, 0);
+    pointer(scene, 'pointermove', 0, 2);
+    expect(touch(scene).defaultPrevented).toBe(true);
+    frame(); expect(card.style.transform).toBe(initial);
+    pointer(scene, 'pointermove', 20, 40); frame();
+    const dragged = card.style.transform;
+    expect(dragged).not.toBe(initial);
+    for (let i = 0; i < 10; i++) expect(touch(scene).defaultPrevented).toBe(true);
+    expect(frames.size).toBe(0);
+    expect(card.style.transform).toBe(dragged);
+    pointer(scene, 'pointerup', 20, 40);
+    const activate = vi.fn(); const poster = root.querySelector<HTMLButtonElement>('.orbit-card button')!;
+    poster.addEventListener('click', activate); poster.click();
+    expect(activate).not.toHaveBeenCalled();
+  });
+
+  it('preserves pinch zoom and a fresh single-finger drag after pinch or cancellation', () => {
+    localStorage.setItem('jayflix.orbit.preferences.v1', JSON.stringify({ version: 1, paused: true }));
+    const { root, scene } = fixture(); frame();
+    pointer(scene, 'pointerdown', 0, 0);
+    pointer(scene, 'pointerdown', 100, 0, 2);
+    pointer(scene, 'pointermove', 200, 0, 2);
+    expect(touch(scene).defaultPrevented).toBe(true);
+    expect(scene.dataset.zoom).toBe('4');
+    pointer(scene, 'pointerup', 200, 0, 2);
+    const before = root.querySelector<HTMLElement>('.orbit-card')!.style.transform;
+    pointer(scene, 'pointermove', 40, 30); frame();
+    expect(root.querySelector<HTMLElement>('.orbit-card')!.style.transform).not.toBe(before);
+    pointer(scene, 'pointercancel', 40, 30);
+    expect(scene.classList.contains('is-dragging')).toBe(false);
+    pointer(scene, 'pointerdown', 0, 0);
+    pointer(scene, 'pointermove', 0, 30);
+    expect(scene.classList.contains('is-dragging')).toBe(true);
+  });
+
+  it('ignores non-cancelable events and removes the touch guard on unmount/remount', () => {
+    const { root, scene, controller } = fixture();
+    const native = new Event('touchmove', { bubbles: true, cancelable: false });
+    const cancel = vi.spyOn(native, 'preventDefault'); scene.dispatchEvent(native);
+    expect(cancel).not.toHaveBeenCalled();
+    controller.destroy();
+    expect(touch(scene).defaultPrevented).toBe(false);
+    const again = createOrbitController(root)!; dispose = () => again.destroy();
+    const move = new Event('touchmove', { bubbles: true, cancelable: true });
+    const prevent = vi.spyOn(move, 'preventDefault'); scene.dispatchEvent(move);
+    expect(prevent).toHaveBeenCalledTimes(1);
   });
 });

@@ -7,6 +7,16 @@ import { OrbitGallery } from '../components/orbit-gallery';
 import { recommendLink } from './recommend-link';
 
 describe('React sphere keeps data order and legacy card actions', () => {
+  it('declares touch ownership only on the interactive scene, not the whole page or toolbar', () => {
+    const css = postcss.parse(readFileSync(new URL('../components/orbit-gallery.css', import.meta.url), 'utf8'));
+    const owners: string[] = [];
+    css.walkDecls('touch-action', (decl) => {
+      expect(decl.value).toBe('none');
+      owners.push((decl.parent as postcss.Rule).selector);
+    });
+    expect(owners).toEqual(['.orbit-scene']);
+  });
+
   it('explicitly disables inherited text decoration on animated detail links', () => {
     const css = postcss.parse(readFileSync(new URL('../components/orbit-gallery.css', import.meta.url), 'utf8'));
     const decorations: string[] = [];
