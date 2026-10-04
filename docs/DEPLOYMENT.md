@@ -12,6 +12,12 @@ root directory empty, Node 22+. The canonical `wrangler.jsonc` supplies Pages ou
 and Node compatibility flags. Runtime PASSWORD and ADMINPASSWORD are distinct
 private bindings; never copy them to source, build substitutions or documentation.
 
+Cloudflare currently uses npm 10.9.2 for this build. The lockfile includes Vite's
+optional esbuild peer and all platform binaries; npm 11's successful local install
+alone does not prove npm 10 clean-install compatibility. Validate changes with
+`npm exec --yes --package=npm@10.9.2 -- npm ci --dry-run --ignore-scripts --no-audit --no-fund`
+before publishing. Do not bypass lockfile validation with an unpinned install.
+
 `scripts/pages-build.mjs` builds OpenNext using `wrangler.workers.jsonc`, then uses
 a **local-only Wrangler dry-run** to bundle the default fetch handler and the
 Pages adapter. No separate Worker is created or uploaded. Static assets and the
