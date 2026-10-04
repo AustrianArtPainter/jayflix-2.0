@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Approved legacy homepage: css/ui-tokens.css + css/ui-theme.css and
+   css/home-orbit.css. Upstream dialog/player geometry stays upstream. */
+:root {
+  --home-ink: #080d11;
+  --home-surface: #10181d;
+  --home-line: rgba(210, 229, 223, .12);
+  --home-muted: #82938f;
+  --home-accent: #a2e2ce;
+  --home-white: #edf2ee;
+  --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ui-panel: #0e1812;
+  --ui-dialog: #111e16;
+  --ui-inset: #142019;
+  --ui-input: #101718;
+  --ui-control: #17241e;
+  --ui-hover: #21362b;
+  --ui-border: #385240;
+  --ui-control-border: #365044;
+  --ui-input-border: #2b3a36;
+  --ui-focus: #789e91;
+  --ui-title: #d4e9d9;
+  --ui-button-text: #b7d5c5;
+  --ui-accent-ink: #0b2118;
+  --ui-accent-hover: #c0efde;
+  --ui-footer-text: #657b6c;
+  --ui-footer-brand: #9fbda8;
+  --ui-footer-link: #a0b9a7;
+  --ui-danger: #e7a3a3;
+  --ui-warning: #ddc18f;
+  --ui-shadow: 0 0 70px #0008;
+  --ui-button-radius: 7px;
+  --ui-dialog-radius: 13px;
+  --palette-tool-text: #bac7c2;
+  --palette-placeholder: #61746e;
+  --palette-tag-active: #b0d9bf;
+  --palette-accent-faint: rgba(162, 226, 206, .04);
+  --palette-accent-track: rgba(162, 226, 206, .145);
+  --palette-accent-loaded: rgba(162, 226, 206, .25);
+  --palette-accent-hover: rgba(162, 226, 206, .125);
+  --palette-accent-focus: rgba(162, 226, 206, .19);
+  --palette-overlay: rgba(8, 13, 17, .88);
+  --palette-player-overlay: rgba(8, 13, 17, .9);
+  /* RGB bridges for existing Tailwind utilities, refreshed by ui-palette.ts. */
+  --c-page: 8 13 17;
+  --c-surface: 14 24 18;
+  --c-surface-raised: 17 30 22;
+  --c-card: 17 30 22;
+  --c-chip: 16 23 24;
+  --c-hover: 33 54 43;
+  --c-line: 43 58 54;
+  --c-content: 237 242 238;
+  --c-muted: 130 147 143;
+  --c-faint: 97 116 110;
+  --c-accent: 162 226 206;
+  --c-accent-hover: 192 239 222;
+  --c-on-accent: 11 33 24;
+  --c-danger: 231 163 163;
+  --c-danger-hover: 231 163 163;
+  --c-success: 162 226 206;
+  --c-warning: 221 193 143;
+  --c-info: 162 226 206;
+  --c-rating: 221 193 143;
+  --c-danger-solid: 231 163 163;
+  --c-success-solid: 162 226 206;
+  --c-warning-solid: 221 193 143;
+  --c-info-solid: 162 226 206;
+  color-scheme: dark;
+}
+html, body { background: var(--home-ink); color: var(--home-white); -webkit-font-smoothing: antialiased; }
+body { margin: 0; font-family: var(--ui-font); }
+html { min-width: 280px; }
+button, input, select, textarea { font: inherit; }
+input:is([type="checkbox"], [type="radio"], [type="range"]) { accent-color: var(--home-accent); }
+:where(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
+
+@layer components {
+  .card { @apply bg-card border border-line rounded-lg overflow-hidden transition-all duration-200; }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40;
+    border-radius: var(--ui-button-radius);
+  }
+  .btn-primary { @apply btn bg-accent text-on-accent hover:bg-accent-hover; }
+  .btn-ghost {
+    @apply btn border;
+    background: var(--ui-control);
+    color: var(--ui-button-text);
+    border-color: var(--ui-control-border);
+  }
+  .btn-ghost:hover { background: var(--ui-hover); color: var(--home-white); border-color: var(--ui-focus); }
+  .input {
+    @apply bg-chip border border-line rounded-md px-3 py-2 text-sm text-content placeholder:text-faint;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:border-accent;
+  }
+  .tag { @apply inline-flex items-center text-xs px-1.5 py-0.5 rounded-full; }
+  .btn-sm { @apply btn px-2.5 py-1 text-xs; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-line rounded-full; }
+}
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.episode-active { background: var(--home-accent) !important; border-color: var(--home-accent) !important; color: var(--ui-accent-ink) !important; }
+.brand-gradient { background: none; color: var(--home-white); -webkit-text-fill-color: currentColor; }
+
+/* Current white wordmark and thin mint camera. */
+.site-header { background: var(--home-ink); }
+.site-header-inner {
+  position: relative; display: flex; align-items: flex-start; gap: 22px; width: min(100%, 1480px);
+  min-height: 101px; margin: auto; padding: 28px 48px 22px;
+  border-bottom: 1px solid var(--home-line);
+}
+.jayflix-brand { display: inline-flex; align-items: center; flex-shrink: 0; gap: 10px; color: var(--home-white); }
+.jayflix-brand span { font-size: 25px; font-weight: 750; letter-spacing: -.8px; }
+.jayflix-brand svg { width: 25px; height: 25px; color: var(--home-accent); }
+.site-header-tools { display: flex; align-items: center; gap: 7px; margin: 2px 0 0 auto; flex-shrink: 0; }
+.site-header-extra-tools, .site-header-legacy-tools { display: flex; align-items: center; gap: 7px; }
+.home-tool-button, .ui-palette-theme {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 34px; padding: 0 10px; background: transparent; color: var(--palette-tool-text);
+  border: 1px solid var(--home-line); border-radius: var(--ui-button-radius);
+  font-size: 12px; white-space: nowrap;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.home-tool-button svg, .ui-palette-theme svg { width: 16px; height: 16px; flex-shrink: 0; }
+.home-tool-button:hover, .ui-palette-theme:hover, .home-tool-active { background: var(--ui-control); border-color: var(--ui-focus); color: var(--home-white); }
+.header-search { flex: 1; min-width: 160px; max-width: 420px; }
+.palette-control { position: relative; }
+.ui-palette-panel {
+  position: absolute; top: calc(100% + 12px); right: 0; z-index: 60;
+  width: min(270px, calc(100vw - 36px)); padding: 14px;
+  border: 1px solid var(--ui-border); border-radius: var(--ui-dialog-radius);
+  background: var(--ui-dialog); color: var(--home-white); box-shadow: var(--ui-shadow); font-size: 12px;
+}
+.ui-palette-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ui-palette-heading-main { display: flex; align-items: center; gap: 8px; }
+.ui-palette-heading h2 { margin: 0; color: var(--ui-title); font-size: 13px; font-weight: 650; }
+.ui-palette-theme { height: 24px; padding: 0 6px; gap: 5px; flex-shrink: 0; }
+.ui-palette-close { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 4px; background: transparent; color: var(--home-muted); }
+.ui-palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.ui-palette-grid label { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--ui-button-text); }
+.ui-palette-grid input[type="color"] { width: 32px; height: 28px; padding: 2px; border: 1px solid var(--ui-control-border); border-radius: 5px; background: var(--ui-control); cursor: pointer; }
+.ui-palette-grid input[type="color"]::-webkit-color-swatch-wrapper { padding: 1px; }
+.ui-palette-grid input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
+.ui-palette-grid input[type="color"]::-moz-color-swatch { border: 0; border-radius: 2px; }
+.ui-palette-reset { width: 100%; margin-top: 14px; padding: 7px 10px; border: 1px solid var(--ui-control-border); border-radius: var(--ui-button-radius); background: var(--ui-control); color: var(--ui-button-text); }
+.ui-palette-close:hover, .ui-palette-reset:hover { background: var(--ui-hover); color: var(--home-white); }
+
+.home-shell { max-width: 1480px; padding: 0 48px; }
+.home-search-section { padding: 20px 0 16px; }
+.home-search-wrap { max-width: 650px; }
+.home-search-bar { height: 52px; border: 1px solid var(--ui-input-border); border-radius: 9px; background: var(--ui-input); box-shadow: 0 12px 30px #0002; }
+.home-search-bar:focus-within { border-color: var(--ui-focus); box-shadow: 0 0 0 3px var(--palette-accent-faint); }
+.home-search-home { width: 76px; flex-shrink: 0; border-right: 1px solid var(--ui-input-border); border-radius: 8px 0 0 8px; background: var(--ui-control); color: var(--ui-button-text); font-size: 12px; }
+.home-search-home:hover { background: var(--ui-hover); }
+.home-search-bar input { min-width: 0; padding: 0 20px; border: 0; background: transparent; font-size: 13px; }
+.home-search-bar input::placeholder { color: var(--palette-placeholder); }
+.home-search-submit { width: 86px; margin: 5px; border-radius: 5px; font-size: 13px; font-weight: 650; }
+/* The full input wrapper anchors the overlay; typography matches film names. */
+.home-search-wrap > div:has(> ul[role="listbox"]), .header-search div:has(> ul[role="listbox"]) {
+  margin-top: 0; border: 1px solid var(--ui-input-border); border-radius: 9px;
+  background: var(--ui-input); box-shadow: 0 14px 30px #0006;
+}
+:is(.home-search-wrap, .header-search) div:has(> ul[role="listbox"]) > div > span,
+:is(.home-search-wrap, .header-search) ul[role="listbox"] li > button:first-child { font-size: .95rem; line-height: 1.3rem; }
+.home-page .card h3 { font-size: .95rem; line-height: 1.3rem; }
+
+/* Rebind literal upstream badges/overlays without changing component APIs. */
+.jayflix-ui [role="dialog"] { border-color: var(--ui-border); }
+.jayflix-ui [role="dialog"]:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
+.jayflix-ui [role="dialog"] :is(h2, h3, h4) { color: var(--ui-title); }
+.jayflix-ui [class~="bg-black/80"] { background-color: rgb(var(--c-page) / .8); }
+.jayflix-ui [class~="bg-black/70"] { background-color: rgb(var(--c-page) / .7); }
+.jayflix-ui [class~="bg-black/60"] { background-color: rgb(var(--c-page) / .6); }
+.jayflix-ui [class~="bg-black/50"] { background-color: rgb(var(--c-page) / .5); }
+.jayflix-ui [class~="bg-black/40"] { background-color: rgb(var(--c-page) / .4); }
+.jayflix-ui [class~="bg-purple-500/15"] { background-color: var(--palette-accent-hover); }
+.jayflix-ui :is([class~="text-purple-600"], [class~="dark:text-purple-300"]) { color: var(--ui-button-text); }
+.jayflix-ui [class~="bg-pink-500/15"] { background-color: rgb(var(--c-danger) / .15); }
+.jayflix-ui :is([class~="text-pink-600"], [class~="dark:text-pink-400"]) { color: var(--ui-danger); }
+.jayflix-ui :is([class~="bg-success-solid"], [class~="bg-info-solid"]) { color: var(--ui-accent-ink); }
+.jayflix-ui :is([class~="bg-warning-solid"], [class~="bg-danger-solid"]) { color: var(--home-ink); }
+.jayflix-ui [class~="accent-[#2563eb]"] { accent-color: var(--home-accent); }
+
+/* Inline Artplayer themes must yield to the palette on both watch and live. */
+.jayflix-ui .art-video-player {
+  --art-theme: var(--home-accent) !important;
+  --art-font-family: var(--ui-font);
+  --art-progress-color: var(--palette-accent-track);
+  --art-loaded-color: var(--palette-accent-loaded);
+  --art-hover-color: var(--palette-accent-hover);
+  --art-widget-background: var(--ui-dialog);
+  --art-tip-background: var(--ui-dialog);
+  --art-border-radius: var(--ui-button-radius);
+}
+.jayflix-ui .art-video-player :is(.art-progress-played, .art-progress-indicator, .art-volume-loaded, .art-volume-indicator) { background-color: var(--home-accent) !important; }
+.jayflix-ui .art-video-player .art-progress-loaded { background-color: var(--palette-accent-loaded) !important; }
+.jayflix-ui .art-video-player .art-progress-hover { background-color: var(--palette-accent-hover) !important; }
+.jayflix-ui .art-video-player :is(.art-settings, .art-selector-list, .art-contextmenus, .art-volume-inner, .art-info, .art-notice-inner) { background: var(--ui-dialog) !important; color: var(--home-white); border-color: var(--ui-border); border-radius: var(--ui-button-radius); }
+.jayflix-ui .art-video-player :is(.art-setting-item, .art-selector-item, .art-contextmenu):hover { background: var(--ui-hover); }
+.jayflix-ui :is(.watch-player-frame, .live-player-frame) > div > [class~="bg-black/80"] { background: var(--palette-player-overlay); }
+.jayflix-ui :is(.watch-player-frame, .live-player-frame) .btn-ghost { background: var(--ui-control) !important; color: var(--ui-button-text) !important; border-color: var(--ui-control-border) !important; }
+
+.watch-header { background: var(--home-ink); border-bottom: 1px solid var(--home-line); }
+.watch-header-inner { min-height: 64px; height: auto; padding-top: 10px; padding-bottom: 10px; }
+.about-page main section { padding-bottom: 24px; border-bottom: 1px solid var(--home-line); }
+.about-page main section:last-child { border-bottom: 0; }
+.about-page main :is(h1, h2) { color: var(--ui-title); }
+.site-footer { background: transparent; border-top: 1px solid var(--home-line); padding: 18px 24px; }
+.site-footer p { color: var(--ui-footer-text); font-size: 11px; }
+.site-footer a { color: var(--ui-footer-link); }
+.site-footer a:hover { color: var(--home-accent); }
+.site-footer .footer-brand { color: var(--ui-footer-brand); font-weight: 650; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--home-accent); animation: live-breathe 2s ease-in-out infinite; }
+@keyframes live-breathe { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--palette-accent-loaded); } 50% { opacity: .55; box-shadow: 0 0 0 4px transparent; } }
+
+@media (max-width: 1100px) {
+  .site-header-inner { flex-wrap: wrap; gap: 14px; }
+  .header-search { order: 3; flex-basis: 100%; max-width: none; }
+  .site-header-extra-tools .home-tool-label { display: none; }
+}
+@media (max-width: 900px) {
+  .site-header-inner { min-height: 87px; padding: 22px 28px 18px; }
+  .site-header-tools { margin-top: 1px; }
+  .home-shell { padding: 0 28px; }
+}
+@media (max-width: 600px) {
+  /* Legacy top/right gutters and reserved logo space. All toolbar entries stay
+     on ONE row; narrow screens share the available width between buttons
+     instead of wrapping, scrolling or moving entries into a menu. */
+  .site-header-inner { display: grid; grid-template-columns: max-content minmax(0, 1fr); min-height: 72px; padding: 17px 18px 14px; gap: 12px; }
+  .jayflix-brand span { font-size: 22px; }
+  .jayflix-brand svg { width: 22px; height: 22px; }
+  .site-header-tools { min-width: 0; justify-content: flex-end; flex-wrap: nowrap; gap: 2px; margin: 0; margin-top: 0; }
+  .site-header-extra-tools, .site-header-legacy-tools { display: contents; }
+  .home-tool-button { width: 34px; min-width: 18px; flex: 0 1 34px; padding: 0; }
+  .home-tool-label { display: none; }
+  .palette-control { position: static; min-width: 18px; flex: 0 1 34px; }
+  .palette-control > .home-tool-button { width: 100%; }
+  .ui-palette-panel { top: calc(100% + 4px); right: 18px; }
+  .home-shell { padding: 0 18px; }
+  .home-search-section { padding-top: 20px; }
+  .home-search-bar { height: 48px; }
+  .home-search-home { width: 58px; }
+  .home-search-bar input { padding: 0 12px; }
+  .home-search-submit { width: 68px; padding: 0 8px; }
+  .home-search-submit svg { display: none; }
+  .watch-header-inner { gap: 8px; flex-wrap: wrap; }
+  .watch-header-actions { width: 100%; justify-content: flex-end; }
+}
+@media (min-width: 480px) and (max-width: 600px) {
+  .site-header-tools { gap: 12px; }
+}
+@media (max-width: 380px) {
+  .jayflix-brand span { font-size: 18px; }
+  .jayflix-brand { gap: 7px; }
+  .jayflix-brand svg { width: 18px; height: 18px; }
+}
+@media (min-width: 1024px) {
+  .live-page main > div > aside { top: calc(var(--site-header-height, 101px) + 16px); height: calc(100svh - var(--site-header-height, 101px) - 32px); }
+}
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
