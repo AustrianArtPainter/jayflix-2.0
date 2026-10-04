@@ -9,6 +9,22 @@ const root = new URL('../../', import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, root), 'utf8');
 
 describe('independent Pages deployment without touching Jayflix 1.x', () => {
+  it('locks Vite’s optional esbuild peer and every platform binary for npm 10 clean installs', () => {
+    const lock = JSON.parse(read('package-lock.json'));
+    const vite = lock.packages['node_modules/vitest/node_modules/vite'];
+    expect(vite.peerDependencies.esbuild).toBe('^0.27.0 || ^0.28.0');
+    const peer = lock.packages['node_modules/vitest/node_modules/esbuild'];
+    expect(peer.version).toMatch(/^0\.(27|28)\./);
+    for (const [name, version] of Object.entries(peer.optionalDependencies)) {
+      const binary = lock.packages[`node_modules/vitest/node_modules/${name}`]
+        ?? lock.packages[`node_modules/${name}`];
+      expect(binary?.version, name).toBe(version);
+      expect(binary?.integrity, name).toMatch(/^sha512-/);
+    }
+    expect(lock.packages['node_modules/wrangler'].version).toBe('4.147.0');
+    expect(lock.packages['node_modules/@opennextjs/cloudflare'].version).toBe('1.20.8');
+  });
+
   it('uses a new Pages project with no service, paid binding, route or credential value', () => {
     const config = JSON.parse(read('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, ''));
     expect(config.name).toBe('jayflix-2-0');
